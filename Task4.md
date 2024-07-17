@@ -276,4 +276,4 @@ components:
 ```
 
 ### ER-модель
-
+https://dbdesigner.page.link/xAsD1Z52GchGu28d6
