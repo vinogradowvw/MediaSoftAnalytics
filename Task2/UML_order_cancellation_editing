@@ -7,22 +7,21 @@ participant DataBase as db
 participant Bakery as bk
 participant Payment_service as ps
 
-
 activate u
 
-u -> fe : Запрос на измененение заказа
+u -> fe : Запрос на изменение заказа
 
 activate fe
-fe ->be : GET /oreder/active/user/(userId)
+fe -> be : GET /order/active/user/(userId)
 
 activate be
 be -> db : Запрос данных о текущем заказе
-note right
 
-SELECT oi,*
+note right
+SELECT oi.*
 FROM order_items oi
 LEFT JOIN orders o ON oi.order_id = o.id
-HVING o.uder_id = userId AND o.status = 'active'
+HAVING o.user_id = userId AND o.status = 'active'
 end note
 
 activate db
@@ -37,7 +36,6 @@ loop Пока пользователь не готов
 alt Добавление новых товаров в заказ
 
 u -> fe : Запрос на доступные товары
-
 
 fe -> be : GET /bakery/{bakeryId}/menu/
 
@@ -57,7 +55,7 @@ fe --> u : Информация о доступных товарах
 
 u -> fe : Добавление товаров, подтверждение действия
 
-fe -> be : POST /order/{orderId}/products?id1,id2,id3...
+fe -> be : PATCH /order/{orderId}/products?id1,id2,id3...
 
 be -> db : Вставка новых товаров в заказ в бд
 
@@ -70,13 +68,13 @@ end note
 
 end
 
-alt Удаение товаров из заказа
+alt Удаление товаров из заказа
 
 u -> fe : Выбор товаров для удаления
 
 fe -> be : DELETE /order/{orderId}/products?id1,id2,id3...
 
-be -> bk : Удаление товаров в заказе из бд
+be -> db : Удаление товаров в заказе из бд
 
 note right
 DELETE FROM order_items 
@@ -86,7 +84,7 @@ end note
 
 end
 
-alt Отмена закза
+alt Отмена заказа
 
 u -> fe : Запрос на удаление заказа
 
@@ -112,16 +110,26 @@ end note
 
 db --> be : Сумма актуального заказа
 
-be -> db: Получение данных о оплаченной части заказа
+be -> db: Получение данных об оплаченной части заказа
 
 note right
 SELECT SUM(amount) FROM payments
 WHERE order_id = orderId
 end note
 
-db --> be : Сумма актуального заказа
+db --> be : Сумма оплаченной части заказа
 
-be -> be : Перерасчет
+be -> be : Перерасчет суммы заказа
+
+be -> fe : Новая сумма заказа
+
+fe -> u : Новая сумма заказа
+
+end
+
+u -> fe : Закончить и оплатить
+
+fe -> be : POST /payment/user/{userId}/initiate [данные о оплате в теле]
 
 be -> ps : Запрос на оплату / возврат
 
@@ -132,7 +140,6 @@ ps --> be : Перенаправление на заполнение формы 
 be --> fe : Перенаправление на заполнение формы для оплаты / возврата
 
 fe --> u : Перенаправление на заполнение формы для оплаты / возврата
-
 
 loop Попыток оплаты < 3
 
@@ -150,39 +157,20 @@ bk --> be : Подтверждение, примерное время ожида
 
 deactivate bk
 
-be -> db : Вставка в бд нового заказа
-
-deactivate be
-
-deactivate db
-
-note right
-
-INSERT INTO orders (user_id, status)
-VALUES (user_id, 'active');
-
-INSERT INTO order_items (order_id, product_id, quantity)
-VALUES 
-    (new_order_id, product_id_1, quantity_1),
-    (new_order_id, product_id_2, quantity_2);
-end note
-
 else Оплата не прошла
 
 ps -> fe : Повторить попытку
 
 deactivate ps
 
-fe -> u: Повторить попытку
+fe -> u : Повторить попытку
 
 deactivate fe
 deactivate u
 
-end
 
 end
 
 end
 
-@endum
 @enduml
