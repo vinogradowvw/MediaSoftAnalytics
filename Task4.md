@@ -78,6 +78,7 @@
 https://www.figma.com/design/uNCFKCbtjze5l5tvMceMb1/%D0%A7%D0%B0%D1%81%D1%82%D0%BD%D0%B0%D1%8F-%D0%BF%D0%B5%D0%BA%D0%B0%D1%80%D0%BD%D1%8F?node-id=0-1&t=6QYEamfx0JOyDaPD-1
 
 ### Sequence диаграмма
+![image](https://github.com/user-attachments/assets/86114206-4611-4386-921a-f1cb2abc0101)
 
 
 ## API запросы в спецификации OpenAPI
